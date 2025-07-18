@@ -7,8 +7,18 @@ jobs:
     - uses: actions/checkout@v4
     - name: Build Docker image
       run: docker build -t myapp:latest .
+    - name: Clean previous containers
+      run: docker stop myapp || true; docker rm myapp || true
     - name: Test app
-      run: docker run -d -p 8000:80 myapp:latest && sleep 5 && curl http://localhost:8000
+      run: docker run -d -p 8000:80 --name myapp myapp:latest && sleep 5 && curl http://localhost:8000 && docker stop myapp && docker rm myapp
+    - name: Install Terraform
+      run: |
+        wget https://releases.hashicorp.com/terraform/1.14.0-alpha20250716/terraform_1.14.0-alpha20250716_linux_amd64.zip
+        unzip terraform_1.14.0-alpha20250716_linux_amd64.zip
+        sudo mv terraform /usr/local/bin/
+        terraform version
+    - name: Terraform init and apply
+      run: terraform init && terraform apply -auto-approve
 
   deploy:
     needs: build
