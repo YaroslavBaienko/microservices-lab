@@ -1,0 +1,19 @@
+---
+- hosts: nodes
+  become: yes
+  tasks:
+    - name: Copy app files
+      copy:
+        src: "{{ item }}"
+        dest: /home/citizenfour/app/
+      loop: [main.py, Dockerfile]
+    - name: Build image on node
+      shell: cd /home/citizenfour/app && docker build -t myapp:latest .
+    - name: Clean previous container
+      shell: docker stop myapp || true; docker rm myapp || true
+    - name: Run container
+      docker_container:
+        name: myapp
+        image: myapp:latest
+        ports: "8000:80"
+        state: started
