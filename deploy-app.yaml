@@ -2,15 +2,23 @@
 - hosts: nodes
   become: yes
   tasks:
-    - name: Copy app files
+    - name: Create app dir
+      file:
+        path: /home/citizenfour/app
+        state: directory
+
+    - name: Copy files
       copy:
         src: "{{ item }}"
-        dest: /home/citizenfour/app/
+        dest: /home/citizenfour/app/{{ item | basename }}
       loop: [main.py, Dockerfile]
-    - name: Build image on node
+
+    - name: Build image
       shell: cd /home/citizenfour/app && docker build -t myapp:latest .
-    - name: Clean previous container
+
+    - name: Clean container
       shell: docker stop myapp || true; docker rm myapp || true
+
     - name: Run container
       docker_container:
         name: myapp
