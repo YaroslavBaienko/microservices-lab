@@ -1,0 +1,24 @@
+name: CI/CD Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build Docker image
+      run: docker build -t myapp:latest .
+    - name: Test app
+      run: docker run -d -p 8000:80 myapp:latest && sleep 5 && curl http://localhost:8000
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install kubectl
+      run: |
+        curl -LO "https://dl.k8s.io/release/v1.31.0/bin/linux/amd64/kubectl"
+        sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+        kubectl version --client
+    - name: Deploy to K8s
+      run: kubectl apply -f deployment.yaml
